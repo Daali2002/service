@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Form</title>
+    <style>
+        .form-container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .left-column {
+            flex: 1;
+            padding-right: 20px;
+        }
+
+        .right-column {
+            flex: 1;
+        }
+
+        /* Style for labels */
+        label {
+            font-weight: bold;
+        }
+
+        /* Style for the description input box */
+        #detail1 {
+            font-size: 16px;
+        }
+		
+		  /* Style for the description input box with custom width and height */
+        #detail1 {
+            font-size: 16px;
+            width: 300px; /* Set the desired width */
+            height: 50px; /* Set the desired height */
+        }
+		
+		 /* Style for the header image */
+        #header-image {
+            max-width: 100%;
+            height: auto;
+            width: 2000px; /* Set the desired width */
+            height: 100px; /* Set the desired height */
+    </style>
+</head>
+<body>
+     
+	<img id="header-image" src="hth.jpg" alt="Header Image">
+    <script src="myscript.js"></script>
+    <h1>Order Details</h1>
+    
+    <!-- Order form -->
+    <form id="order-form">
+        <div class="form-container">
+            <div class="left-column">
+                <label for="product-name">Requester:</label>
+                <input type="text" id="product-name" required><br><br>
+
+                <!-- Add the fields you want on the left here -->
+                <label for="detail1">Description:</label>
+                <input type="text" id="detail1" required><br><br>
+
+                <label for="detail2">Planner:</label>
+                <input type="text" id="detail2" required><br><br>
+
+                <label for="detail3">PO Number:</label>
+                <input type="text" id="detail3" required><br><br>
+
+                <label for="detail4">Cost Center:</label>
+                <input type="text" id="detail4" required><br><br>
+
+            </div>
+            <div class="right-column">
+                <!-- Add the fields you want on the right here -->
+				
+                <label for="detail5">Value Stream:</label>
+                <input type="text" id="detail5" required><br><br>
+				
+                <label for="service-entry">Service Entry:</label>
+                <input type="radio" id="service-entry-yes" name="service-entry" value="Yes" required>
+                <label for="service-entry-yes">Yes</label>
+                <input type="radio" id="service-entry-no" name="service-entry" value="No" required>
+                <label for="service-entry-no">No</label>
+                <br><br>
+
+                <label for="pdf-file1">Quotation:</label>
+                <input type="file" id="pdf-file1" accept=".pdf"><br><br>
+
+                <label for="pdf-file2">Purchase Order:</label>
+                <input type="file" id="pdf-file2" accept=".pdf"><br><br>
+
+                <label for="pdf-file3">Invoice:</label>
+                <input type="file" id="pdf-file3" accept=".pdf"><br><br>
+            </div>
+        </div>
+
+        <input type="hidden" id="edit-index" value="">
+        <input type="submit" value="Submit">
+    </form>
+
+    <!-- Display saved orders in a table -->
+    <h2>Saved Orders</h2>
+    <table id="order-table" border="1">
+        <thead>
+            <tr>
+                <th>Order</th>
+                <th>Requester</th>
+                <th>Description</th>
+                <th>Planner</th>
+                <th>PO Number</th>
+                <th>Cost Center</th>
+                <th>Value Stream</th>
+                <th>Service Entry</th>
+                <th>Quotation</th>
+                <th>Purchase Order</th>
+                <th>Invoice</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Orders will be displayed here -->
+        </tbody>
+    </table>
+
+    <script>
+        // Check if there are any saved orders in localStorage and display them
+        function displaySavedOrders() {
+            const orderTable = document.getElementById('order-table');
+            const tbody = orderTable.querySelector('tbody');
+            tbody.innerHTML = ''; // Clear the existing table rows
+
+            const savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
+            savedOrders.forEach((order, index) => {
+                const row = createOrderRow(order, index);
+                tbody.appendChild(row);
+            });
+        }
+
+        // Create a table row for an order
+        function createOrderRow(order, index) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${order.productName}</td>
+                <td>${order.detail1}</td>
+                <td>${order.detail2}</td>
+                <td>${order.detail3}</td>
+                <td>${order.detail4}</td>
+                <td>${order.detail5}</td>
+                <td>${order.serviceEntry}</td>
+                <td><a href="${order.pdfFile1}" target="_blank">${order.pdfFileName1}</a></td>
+                <td><a href="${order.pdfFile2}" target="_blank">${order.pdfFileName2}</a></td>
+                <td><a href="${order.pdfFile3}" target="_blank">${order.pdfFileName3}</a></td>
+                <td>
+                    <button onclick="editOrder(${index})">Edit</button>
+                    <button onclick="deleteOrder(${index})">Delete</button>
+                </td>
+            `;
+            return row;
+        }
+
+        // Handle form submission for both new orders and edits
+        document.getElementById('order-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const productName = document.getElementById('product-name').value;
+
+            // Get PDF files and their names
+            const pdfFileInput1 = document.getElementById('pdf-file1');
+            const pdfFile1 = pdfFileInput1.files[0];
+            const pdfFileName1 = pdfFile1 ? pdfFile1.name : 'N/A';
+
+            const pdfFileInput2 = document.getElementById('pdf-file2');
+            const pdfFile2 = pdfFileInput2.files[0];
+            const pdfFileName2 = pdfFile2 ? pdfFile2.name : 'N/A';
+
+            const pdfFileInput3 = document.getElementById('pdf-file3');
+            const pdfFile3 = pdfFileInput3.files[0];
+            const pdfFileName3 = pdfFile3 ? pdfFile3.name : 'N/A';
+
+            // Get additional details from the left column
+            const detail1 = document.getElementById('detail1').value;
+            const detail2 = document.getElementById('detail2').value;
+            const detail3 = document.getElementById('detail3').value;
+            const detail4 = document.getElementById('detail4').value;
+            const detail5 = document.getElementById('detail5').value;
+
+            // Get the selected value from the radio buttons for Service Entry
+            const serviceEntryRadios = document.getElementsByName('service-entry');
+            let serviceEntry = '';
+
+            for (const radio of serviceEntryRadios) {
+                if (radio.checked) {
+                    serviceEntry = radio.value;
+                    break;
+                }
+            }
+
+            // Get the existing orders from localStorage or create an empty array
+            const savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
+            const editIndex = document.getElementById('edit-index').value;
+
+            if (editIndex !== '') {
+                // If editIndex is not empty, it's an edit operation
+                const editedOrder = savedOrders[editIndex];
+
+                // Update the fields that should change
+                editedOrder.productName = productName;
+                editedOrder.detail1 = detail1;
+                editedOrder.detail2 = detail2;
+                editedOrder.detail3 = detail3;
+                editedOrder.detail4 = detail4;
+                editedOrder.detail5 = detail5;
+                editedOrder.serviceEntry = serviceEntry;
+
+                // Update only the PDF file data if a new file is selected
+                if (pdfFile1) {
+                    editedOrder.pdfFileName1 = pdfFileName1;
+                    const reader1 = new FileReader();
+                    reader1.onload = function () {
+                        editedOrder.pdfFile1 = reader1.result;
+                        saveUpdatedOrders(savedOrders);
+                    };
+                    reader1.readAsDataURL(pdfFile1); // Read the PDF file as a data URL
+                }
+
+                if (pdfFile2) {
+                    editedOrder.pdfFileName2 = pdfFileName2;
+                    const reader2 = new FileReader();
+                    reader2.onload = function () {
+                        editedOrder.pdfFile2 = reader2.result;
+                        saveUpdatedOrders(savedOrders);
+                    };
+                    reader2.readAsDataURL(pdfFile2); // Read the PDF file as a data URL
+                }
+
+                if (pdfFile3) {
+                    editedOrder.pdfFileName3 = pdfFileName3;
+                    const reader3 = new FileReader();
+                    reader3.onload = function () {
+                        editedOrder.pdfFile3 = reader3.result;
+                        saveUpdatedOrders(savedOrders);
+                    };
+                    reader3.readAsDataURL(pdfFile3); // Read the PDF file as a data URL
+                }
+            } else {
+                // Otherwise, it's a new order
+                const newOrder = {
+                    productName,
+                    detail1,
+                    detail2,
+                    detail3,
+                    detail4,
+                    detail5,
+                    serviceEntry,
+                    pdfFileName1: pdfFileName1,
+                    pdfFileName2: pdfFileName2,
+                    pdfFileName3: pdfFileName3,
+                };
+
+                // Convert the PDF files to data URLs only if new files are selected
+                const reader1 = new FileReader();
+                const reader2 = new FileReader();
+                const reader3 = new FileReader();
+
+                reader1.onload = function () {
+                    newOrder.pdfFile1 = reader1.result || '';
+                    if (pdfFile2) {
+                        reader2.readAsDataURL(pdfFile2); // Read the PDF file as a data URL
+                    }
+                };
+
+                reader2.onload = function () {
+                    newOrder.pdfFile2 = reader2.result || '';
+                    if (pdfFile3) {
+                        reader3.readAsDataURL(pdfFile3); // Read the PDF file as a data URL
+                    } else {
+                        saveNewOrder(newOrder);
+                    }
+                };
+
+                reader3.onload = function () {
+                    newOrder.pdfFile3 = reader3.result || '';
+                    saveNewOrder(newOrder);
+                };
+
+                if (pdfFile1) {
+                    reader1.readAsDataURL(pdfFile1); // Read the PDF file as a data URL
+                } else if (pdfFile2) {
+                    reader2.readAsDataURL(pdfFile2); // Read the PDF file as a data URL
+                } else if (pdfFile3) {
+                    reader3.readAsDataURL(pdfFile3); // Read the PDF file as a data URL
+                } else {
+                    // No PDF files selected, save the new order with empty PDFs
+                    saveNewOrder(newOrder);
+                }
+            }
+        });
+
+        function saveUpdatedOrders(updatedOrders) {
+            localStorage.setItem('orders', JSON.stringify(updatedOrders));
+            // Clear the form fields and reset edit index
+            clearFormFields();
+            // Change the submit button text back to "Submit"
+            resetSubmitButton();
+            // Display the saved orders
+            displaySavedOrders();
+        }
+
+        function saveNewOrder(newOrder) {
+            const savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
+            savedOrders.push(newOrder);
+            localStorage.setItem('orders', JSON.stringify(savedOrders));
+            // Clear the form fields and reset edit index
+            clearFormFields();
+            // Change the submit button text back to "Submit"
+            resetSubmitButton();
+            // Display the saved orders
+            displaySavedOrders();
+        }
+
+        function clearFormFields() {
+            document.getElementById('product-name').value = '';
+            document.getElementById('pdf-file1').value = '';
+            document.getElementById('pdf-file2').value = '';
+            document.getElementById('pdf-file3').value = '';
+            document.getElementById('detail1').value = '';
+            document.getElementById('detail2').value = '';
+            document.getElementById('detail3').value = '';
+            document.getElementById('detail4').value = '';
+            document.getElementById('detail5').value = '';
+        }
+
+        function resetSubmitButton() {
+            document.querySelector('input[type="submit"]').value = 'Submit';
+        }
+
+        // Function to edit an order
+        function editOrder(index) {
+            const savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
+            const orderToEdit = savedOrders[index];
+
+            // Populate the form fields with the order to edit
+            document.getElementById('product-name').value = orderToEdit.productName;
+            document.getElementById('detail1').value = orderToEdit.detail1;
+            document.getElementById('detail2').value = orderToEdit.detail2;
+            document.getElementById('detail3').value = orderToEdit.detail3;
+            document.getElementById('detail4').value = orderToEdit.detail4;
+            document.getElementById('detail5').value = orderToEdit.detail5;
+            document.getElementById('edit-index').value = index; // Store the index for editing
+
+            // Select the appropriate radio button for Service Entry
+            const serviceEntryRadios = document.getElementsByName('service-entry');
+            for (const radio of serviceEntryRadios) {
+                if (radio.value === orderToEdit.serviceEntry) {
+                    radio.checked = true;
+                    break;
+                }
+            }
+
+            // Change the submit button text to "Update" for editing
+            document.querySelector('input[type="submit"]').value = 'Update';
+        }
+
+        // Function to delete an order
+        function deleteOrder(index) {
+            const savedOrders = JSON.parse(localStorage.getItem('orders')) || [];
+            savedOrders.splice(index, 1); // Remove the order at the specified index
+            localStorage.setItem('orders', JSON.stringify(savedOrders));
+            displaySavedOrders(); // Update the displayed orders
+        }
+
+        // Initial display of saved orders
+        displaySavedOrders();
+    </script>
+</body>
+</html>
